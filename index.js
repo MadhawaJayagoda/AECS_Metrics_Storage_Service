@@ -20,12 +20,12 @@ const Metrics = mongoose.model(
   })
 );
 
-// Store metrics data in Mongo DB
+// Store metrics
 app.post("/metrics/:username", async (req, res) => {
-  const { username } = req.params;
+  const username = req.params.username;
   const { commits, pullRequests, issues, releases } = req.body;
 
-  // Create a new metrics document
+  // Create a new metrics
   const metrics = new Metrics({
     username,
     timestamp: new Date().toISOString(),
@@ -37,33 +37,28 @@ app.post("/metrics/:username", async (req, res) => {
 
   try {
     await metrics.save();
-    res.status(200).json({ message: "Metrics data stored successfully" });
+    res.status(200).send("Metrics data stored successfully");
   } catch (error) {
-    console.error("Error storing metrics data:", error);
-    res.status(500).json({ error: "Failed to store metrics data" });
+    res.status(500).send("Failed to store metrics data");
   }
 });
 
 // Retrieve metrics data by username
 app.get("/metrics/:username", async (req, res) => {
-  const { username } = req.params;
+  const username = req.params.username;
 
   try {
-    // Query MongoDB for metrics data by username
     const metricsData = await Metrics.find({ username });
-
-    res.status(200).json({ metricsData });
+    res.status(200).send(metricsData);
   } catch (error) {
-    console.error("Error retrieving metrics data:", error);
-    res.status(500).json({ error: "Failed to retrieve metrics data" });
+    res.status(500).send("Failed to retrieve metrics data");
   }
 });
 
-// Route to retrieve total metrics for a specific month
+// Retrieve total metrics for a specific month
 app.get("/metrics/:username/:year/:month", async (req, res) => {
   const { username, year, month } = req.params;
 
-  // Define the query parameters
   const startOfMonth = new Date(`${year}-${month}-01T00:00:00.000Z`);
   const endOfMonth = new Date(`${year}-${month}-31T23:59:59.999Z`);
 
@@ -79,9 +74,7 @@ app.get("/metrics/:username/:year/:month", async (req, res) => {
     const metricsData = await Metrics.find(queryParams);
 
     if (metricsData.length === 0) {
-      res
-        .status(404)
-        .json({ error: "No metrics found for the specified month" });
+      res.status(404).send("No metrics found for the specified month");
       return;
     }
 
@@ -100,15 +93,14 @@ app.get("/metrics/:username/:year/:month", async (req, res) => {
       0
     );
 
-    res.status(200).json({
+    res.status(200).send({
       totalCommits,
       totalPullRequests,
       totalIssues,
       totalReleases,
     });
   } catch (error) {
-    console.error("Error retrieving metrics data:", error);
-    res.status(500).json({ error: "Failed to retrieve metrics data" });
+    res.status(500).send("Failed to retrieve metrics data");
   }
 });
 
